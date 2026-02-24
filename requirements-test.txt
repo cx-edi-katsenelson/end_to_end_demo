@@ -1,0 +1,4 @@
+# Test dependencies (in addition to requirements.txt)
+pytest==7.2.1
+pytest-flask==1.2.0
+coverage==7.2.0
