@@ -13,14 +13,24 @@
 
 ## Security Issues (Intentional)
 
-1. **Code Injection Vulnerability**: The `/data` endpoint uses `eval()` on user input
-2. **Exposed Secrets**: API keys and database passwords are hardcoded in source code
+1. **Code Injection Vulnerability**: The `/data` endpoint uses `eval()` on user input when a 'command' key is present in the JSON payload. This is at one indentation layer deep (inside the try block) as specified.
+
+   Example exploit:
+   ```bash
+   curl -X POST http://localhost:5000/data \
+     -H "Content-Type: application/json" \
+     -d '{"command": "__import__('os').system('ls')"}'
+   ```
 
 ## Dependencies
 
 - Flask 2.2.3
 - Werkzeug 2.2.3
-- Gunicorn 21.2.0 (uses deprecated `gunicorn_paste()` method)
+- Gunicorn 21.2.0 (includes deprecated `gunicorn_paste()` method demonstration)
+- PasteDeploy 2.1.1 (for Paste integration)
+- pytest 7.4.0 (for testing)
+
+**Note**: The `gunicorn_config.py` file demonstrates the usage of the `gunicorn_paste()` method which is available in Gunicorn 21.2.0 but deprecated in 23.0.0. This method was used for Paste Deploy integration.
 
 ## Files Created
 
@@ -76,6 +86,12 @@ curl -X POST http://localhost:5000/data \
 Tests are created in `test_app.py` but not executed per requirements. To run tests manually:
 
 ```bash
-chmod +x run_tests.sh
-./run_tests.sh
+# Install dependencies first
+pip install -r requirements.txt
+
+# Run tests
+pytest test_app.py -v
+
+# Or with coverage
+pytest test_app.py -v --cov=app --cov-report=html
 ```
