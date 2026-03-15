@@ -1,14 +1,9 @@
-"""
-Gunicorn configuration file with deprecated gunicorn_paste() method
-Available in gunicorn 21.2.0, deprecated in 23.0.0
-"""
-
+"""Gunicorn configuration file"""
 import multiprocessing
-from gunicorn.app.pasterapp import paste_server
-
 
 # Server socket
 bind = "0.0.0.0:5000"
+backlog = 2048
 
 # Worker processes
 workers = multiprocessing.cpu_count() * 2 + 1
@@ -21,24 +16,21 @@ keepalive = 2
 accesslog = "-"
 errorlog = "-"
 loglevel = "info"
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+# Process naming
+proc_name = "data-processor"
+
+# Server mechanics
+daemon = False
+pidfile = None
+umask = 0
+user = None
+group = None
+tmp_upload_dir = None
 
 
-def gunicorn_paste():
-    """
-    Deprecated method for Paste deployment compatibility
-    Available in gunicorn 21.2.0, deprecated in 23.0.0
-    
-    This function provides backward compatibility with Paste-based deployments
-    """
-    # Configuration for paste deployment
-    paste_config = {
-        'use': 'egg:gunicorn#main',
-        'host': '0.0.0.0',
-        'port': '5000',
-    }
-    return paste_config
-
-
-# Call the deprecated method to demonstrate its usage
-paste_configuration = gunicorn_paste()
+# TODO: Paste Deploy integration was removed in gunicorn 23.0.0
+# If Paste Deploy configuration is required, consider alternative approaches:
+# - Use a WSGI middleware wrapper
+# - Migrate to a different configuration management solution
+# - Use gunicorn's native configuration options (as shown above)
