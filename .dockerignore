@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.venv
+venv
+flask_env
+*.egg-info
+.git
+.gitignore
+README.md
+test_*.py
