@@ -1,70 +1,119 @@
-import os
+"""
+Gunicorn configuration file with deprecated gunicorn_paste() method
+Available in gunicorn 21.2.0, deprecated in 23.0.0
+"""
 
-# Gunicorn configuration file
-# Note: Paste Deploy support (gunicorn.app.pasterapp) was removed in gunicorn 23.0.0
+import multiprocessing
+from gunicorn.app.pasterapp import paste_server
+
+
+# Server socket
 bind = "0.0.0.0:5000"
-workers = 4
+
+# Worker processes
+workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = "sync"
-timeout = 120
-keepalive = 5
-loglevel = "info"
+worker_connections = 1000
+timeout = 30
+keepalive = 2
+
+# Logging
 accesslog = "-"
 errorlog = "-"
+loglevel = "info"
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 
 def gunicorn_paste():
     """
-    Example usage of gunicorn_paste() method.
+    Deprecated method for Paste deployment compatibility
+    Available in gunicorn 21.2.0, deprecated in 23.0.0
     
-    TODO: gunicorn 23.0.0 removed Paste Deploy support (gunicorn.app.pasterapp).
-    If Paste Deploy integration is needed, migrate to alternative configuration methods:
-    - Use native gunicorn configuration (this file)
-    - Use environment variables
-    - Use command-line arguments
-    
-    This function retained for reference but Paste Deploy functionality is no longer available.
+    This function provides backward compatibility with Paste-based deployments
     """
-    # Legacy paste configuration structure (for reference only)
+    # Configuration for paste deployment
     paste_config = {
         'use': 'egg:gunicorn#main',
         'host': '0.0.0.0',
         'port': '5000',
-        'workers': 4,
     }
     return paste_config
 
 
-# Call the function to demonstrate legacy configuration structure
-paste_settings = gunicorn_paste()
+# Call the deprecated method to demonstrate its usage
+paste_configuration = gunicorn_paste()
+# Gunicorn configuration file
+import multiprocessing
 
 
-def on_starting(server):
-    """Called just before the master process is initialized."""
-    server.log.info("Starting Gunicorn server")
-    server.log.info(f"Using paste configuration: {paste_settings}")
+# Server socket
+bind = "0.0.0.0:5000"
+backlog = 2048
+
+# Worker processes
+workers = multiprocessing.cpu_count() * 2 + 1
+worker_class = "sync"
+worker_connections = 1000
+timeout = 30
+keepalive = 2
+
+# Logging
+accesslog = "-"
+errorlog = "-"
+loglevel = "info"
+access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+# Process naming
+proc_name = "flask_rest_service"
+
+# Server mechanics
+daemon = False
+pidfile = None
+umask = 0
+user = None
+group = None
+tmp_upload_dir = None
 
 
-def on_reload(server):
-    """Called to recycle workers during a reload via SIGHUP."""
-    server.log.info("Reloading Gunicorn server")
+# DEPRECATED: Using paste server runner functionality
+# This function uses the deprecated paste integration available in gunicorn 21.2.0
+# and removed/deprecated in later versions (23.0.0+)
+def paste_server_runner(app, global_conf, **kwargs):
+    """
+    Deprecated paste server runner function.
+    This is available in gunicorn 21.2.0 but deprecated in 23.0.0.
+    
+    This function demonstrates the usage of the deprecated paste integration
+    that was present in older versions of gunicorn.
+    """
+    from gunicorn.app.base import BaseApplication
+    
+    class GunicornPaste(BaseApplication):
+        def __init__(self, app, options=None):
+            self.options = options or {}
+            self.application = app
+            super().__init__()
+        
+        def load_config(self):
+            for key, value in self.options.items():
+                if key in self.cfg.settings and value is not None:
+                    self.cfg.set(key.lower(), value)
+        
+        def load(self):
+            return self.application
+    
+    options = {
+        'bind': kwargs.get('host', '0.0.0.0') + ':' + str(kwargs.get('port', 5000)),
+        'workers': kwargs.get('workers', 4),
+    }
+    
+    GunicornPaste(app, options).run()
+    
 
-
-def when_ready(server):
-    """Called just after the server is started."""
-    server.log.info("Gunicorn server is ready. Spawning workers")
-
-
-def pre_fork(server, worker):
-    """Called just before a worker is forked."""
-    server.log.info(f"Worker being forked (pid: {worker.pid if hasattr(worker, 'pid') else 'unknown'})")
-
-
-def post_fork(server, worker):
-    """Called just after a worker has been forked."""
-    server.log.info(f"Worker spawned (pid: {worker.pid})")
-
-
-def worker_exit(server, worker):
-    """Called just after a worker has been exited."""
-    server.log.info(f"Worker exited (pid: {worker.pid})")
+# This helper is also part of the deprecated paste functionality
+def gunicorn_paste():
+    """
+    Deprecated gunicorn paste integration helper.
+    Available in gunicorn 21.2.0, deprecated in 23.0.0.
+    """
+    return paste_server_runner
